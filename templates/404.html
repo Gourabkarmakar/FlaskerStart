@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
 	<title>404 Error</title>
@@ -13,11 +13,13 @@
 	</div>
 
 </body>
-</html>
+</html> -->
 
 
-
-<!-- <center>
-	<h1>404 Page Not Found</h1>
-	<p>This Page Not Available For Now</p>
-</center> -->
+{% extends 'base.html' %}
+{% block content %}
+	<center>
+		<h1>404 Page Not Found</h1>
+		<p>This Page Not Available For Now</p>
+	</center>
+{% endblock %}
