@@ -1,0 +1,18 @@
+
+{% extends 'base.html' %}
+{% block content %}
+
+	<h1 class="font-weight-bold">This is my First Web page.</h1>
+	<p class="font-weight-bold">
+		My Name is {{ name }}
+	</p>
+
+	<h2 class="font-weight-bold">This is Pizza Review Center.</h2>
+	{% for topping in favorite_pizza %}
+
+		{{topping}}</br>
+	{%	endfor	%}
+{{ favorite_pizza|join(" <-- or -->") }}
+
+
+{% endblock %}

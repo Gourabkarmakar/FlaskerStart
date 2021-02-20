@@ -1,0 +1,27 @@
+<html>
+<head>
+	<title>Title of Page First page</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="./style.css"></link>
+
+</head>
+<body>
+	<div class="font">
+		<div class="name" style="color: brown; font-family: ui-monospace; font-size: -webkit-xxx-large; font-size: xxx-large; text-decoration: underline;">
+			{{ name }}
+		</div>
+		<div class=midpage>
+			<p>This is my First Web page.</p>
+		</div>
+
+		<!-- Print Pizza List -->
+		<!-- <p>{{ favorite_pizza }}</p> -->
+
+		{% for topping in favorite_pizza %}
+			{{topping}}</br>
+		{%	endfor	%}
+	</div>
+	<!-- {{ favorite_pizza|join(" or ") }} -->
+
+</body>
+</html>
