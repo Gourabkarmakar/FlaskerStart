@@ -2,19 +2,62 @@ from flask import Flask, render_template, flash
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+
 
 # Create a Flask Instance
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "my super secret key for csrf"
+app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///user.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
+
+# Initialize Database
+db=SQLAlchemy(app)
+
+# Create Model
+class User(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.String(200),nullable=False)
+    email = db.Column(db.String(100),nullable=False, unique=True)
+    date_added = db.Column(db.DateTime,default=datetime.now)
+
+    # Create a String
+    def __repr__(self):
+        return '<Name %r>' % self.name
 
 
 # Create a Form Class
+class UserForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
 class NameForm(FlaskForm):
     name = StringField("What Is Your Name", validators=[DataRequired()])
     submit = SubmitField('Submit')
+    
 
 
 # create a route
+@app.route('/user/add', methods=['GET','POST'])
+def add_user():
+    name=None
+    form=UserForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is None:
+            user=User(name=form.name.data, email=form.email.data)
+            db.session.add(user)
+            db.session.commit()
+        name = form.name.data
+        form.name.data=''
+        form.email.data=''
+        flash("User Added Sucessfully.....")
+    our_users = User.query.order_by(User.date_added)
+
+    return render_template('add_user.html',form=form,name=name,our_users=our_users)
+
 
 # Create a route decorator
 @app.route('/')
