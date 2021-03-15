@@ -1,9 +1,23 @@
+
 {% extends 'base.html' %}
 {% block content %}
-    <h1>Hello Programers</h1>
-    <p>This is My first web page In Flask</p>
-    <h3>Favorite Pizza</h3>
-    {% for topping in favorite_pizza %}
-     {{topping}}</br>
-    {% endfor %}
+
+	<h1 class="font-weight-bold">This is my First Web page.</h1>
+	<p class="font-weight-bold" id="name">
+		My Name is {{ name }}
+	</p>
+	<script src="{{ url_for('static', filename='js/myfile.js') }}"></script>
+
+		<img src="https://images.pexels.com/photos/5994354/pexels-photo-5994354.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="Image Goes Here" height=600>
+
+	
+
+	<h2 class="font-weight-bold">This is Pizza Review Center.</h2>
+	{% for topping in favorite_pizza %}
+
+		{{topping}}</br>
+	{%	endfor	%}
+{{ favorite_pizza|join(" <-- or -->") }}
+
+
 {% endblock %}
