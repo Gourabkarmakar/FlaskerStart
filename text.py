@@ -1,2 +1,2 @@
-user_name=kernel
-password=baruog199907
+user_name=username
+password=password
