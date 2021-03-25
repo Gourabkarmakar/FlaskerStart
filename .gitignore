@@ -1,0 +1,6 @@
+AppFlask
+__pycache__
+.idea
+user.db
+text.py
+user.text
