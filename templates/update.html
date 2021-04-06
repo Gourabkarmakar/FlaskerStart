@@ -23,13 +23,13 @@
     <h1>Update  User:</h1>
     <br>
     <div class="shadow p-3 mb-5 bg-body rounded">
-        <form action="{{ url_for('add_user')}}" method="POST">
+        <form action="/update/{{ name_to_update.id }}" method="POST">
             {{ form.hidden_tag() }}
             {{ form.name.label(class="form-label")}}
-            {{ form.name(class="form-control")}}
+            {{ form.name(class="form-control", value=name_to_update.name)}}
             <br>
             {{ form.email.label(class="form-label")}}
-            {{ form.email(class="form-control")}}
+            {{ form.email(class="form-control" ,value=name_to_update.email)}}
             <br>
             {{form.submit(class="btn btn-primary")}}
 

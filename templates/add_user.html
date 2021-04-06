@@ -44,7 +44,11 @@
 
         </td>
         <td>
-            <a href="{{ url_for('update', id=our_user.id )}}">Update</a>
+            <a class ="btn btn-success" href="{{ url_for('update', id=our_user.id )}}">Update</a>
+
+        </td>
+        <td>
+            <a class ="btn btn-danger" href="{{ url_for('delete', id=our_user.id )}}">Delete</a>
 
         </td>
     </tr>

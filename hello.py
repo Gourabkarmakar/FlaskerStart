@@ -69,6 +69,12 @@ def update(id):
                                name_to_update=name_to_update)
 
 
+# Delete
+@app.route('/delete/<int:id>', methods=['GET', 'POST'])
+def delete(id):
+    pass
+
+
 # create a route
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
