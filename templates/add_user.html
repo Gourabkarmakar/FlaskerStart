@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
+
 {% if name %}
     <h1>
         User Added.
@@ -9,7 +10,7 @@
         {% for our_user in our_users %}
         <tr>
             <td>
-                {{our_user.id}} {{our_user.name}} - {{ our_user.email }}
+                {{our_user.id}} {{our_user.name}} - {{ our_user.email }} - {{ our_user.favorite_color}}
     
             </td>
         </tr>
@@ -27,10 +28,13 @@
             {{ form.hidden_tag() }}
             {{ form.name.label(class="form-label")}}
             {{ form.name(class="form-control")}}
-            <br>
+            <br/>
             {{ form.email.label(class="form-label")}}
             {{ form.email(class="form-control")}}
-            <br>
+            <br/>
+            {{ form.favorite_color.label(class="form-label")}}
+            {{ form.favorite_color(class="form-control")}}
+            <br/>
             {{form.submit(class="btn btn-primary")}}
 
         </form>
@@ -40,11 +44,15 @@
     {% for our_user in our_users %}
     <tr>
         <td>
-            {{our_user.id}} {{our_user.name}} - {{ our_user.email }}
+            {{our_user.id}} {{our_user.name}} - {{ our_user.email }} -{{our_user.favorite_color}}
 
         </td>
         <td>
-            <a href="{{ url_for('update', id=our_user.id )}}">Update</a>
+            <a class ="btn btn-success" href="{{ url_for('update', id=our_user.id )}}">Update</a>
+
+        </td>
+        <td>
+            <a class ="btn btn-danger" href="{{ url_for('delete', id=our_user.id )}}">Delete</a>
 
         </td>
     </tr>
