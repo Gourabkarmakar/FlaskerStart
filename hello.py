@@ -77,7 +77,26 @@ def update(id):
 # Delete
 @app.route('/delete/<int:id>', methods=['GET', 'POST'])
 def delete(id):
-    pass
+    user_to_delete = User.query.get_or_404(id)
+    form = UserForm()
+    name = None
+    our_users = User.query.order_by(User.date_added)
+    try:
+        db.session.delete(user_to_delete)
+        db.session.commit()
+        flash("User Deleted Sucessfully! ")
+        return render_template("add_user.html",
+                               form=form,
+                               name=name,
+                               our_users=our_users)
+
+    except:
+        print('Got Some error')
+        flash('Oops There Is a Problem')
+        return render_template("add_user.html",
+                               form=form,
+                               name=name,
+                               our_users=our_users)
 
 
 # create a route Add User
@@ -88,7 +107,9 @@ def add_user():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None:
-            user = User(name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data)
+            user = User(name=form.name.data,
+                        email=form.email.data,
+                        favorite_color=form.favorite_color.data)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
@@ -121,8 +142,6 @@ def user(name):
 
 
 # Create a custom  Error Page
-
-
 # Invalid URL
 @app.errorhandler(404)
 def page_not_found(Error):
