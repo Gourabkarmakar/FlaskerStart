@@ -23,7 +23,13 @@
             <br>
             {{ form.favorite_color.label(class="form-label")}}
             {{ form.favorite_color(class="form-control", value=name_to_update.favorite_color)}}
-            <br>
+            <br/>
+            {{ form.password_hash.label(class="form-label")}} 
+            {{form.password_hash(class="form-control", value=name_to_update.password_hash)}}
+            <br />
+            {{ form.password_hash2.label(class="form-label")}} {{
+                form.password_hash2(class="form-control", value=name_to_update.password_hash2)}}
+            <br/>
             {{form.submit(class="btn btn-primary")}}
 
         </form>
