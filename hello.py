@@ -1,7 +1,6 @@
 from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField,BooleanField, ValidationError
-
 from wtforms.validators import DataRequired, EqualTo, Length
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -117,6 +116,22 @@ def add_posts():
 
     return render_template("add_post.html",form= form)
 
+# Delete Posts
+@app.route('/posts/delete/<int:id>')
+def delete_post(id):
+    post_to_delete = Posts.query.get_or_404(id)
+    try:
+        db.session.delete(post_to_delete)
+        db.session.commit()
+
+        # Return A Message
+        flash("Blog Post Deleted")
+        posts = Posts.query.order_by(Posts.date_posted)
+        return render_template("posts.html", posts=posts)
+
+    except:
+        flash("Sorry This Post Not Deleted , We Fix This Soon...")
+        
 
 @app.route('/posts', methods=["GET","POST"])
 def posts():
@@ -153,7 +168,6 @@ def edit_post(id):
     return render_template(
         'edit_post.html',
         form = form,
-        
     )
 
 
@@ -191,7 +205,7 @@ def update(id):
                                name_to_update=name_to_update)
 
 
-# Delete
+# Delete Users
 @app.route('/delete/<int:id>', methods=['GET', 'POST'])
 def delete(id):
     user_to_delete = User.query.get_or_404(id)
