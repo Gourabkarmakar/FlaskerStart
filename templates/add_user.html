@@ -10,7 +10,8 @@ get_flashed_messages() %}
   ></button>
 </div>
 
-{% endfor %} {% if name %}
+{% endfor %}
+{% if name %}
 <h1>
   User Added.
   <br />
@@ -19,8 +20,8 @@ get_flashed_messages() %}
   {% for our_user in our_users %}
   <tr>
     <td>
-      {{our_user.id}} {{our_user.name}} - {{ our_user.email }} - {{
-      our_user.favorite_color}} - {{our_user.password_hash}}
+      <h5>ID:{{our_user.id}}</h5> <p> {{our_user.name}} -  {{our_user.uername}} - {{ our_user.email }} - {{
+      our_user.favorite_color}} - {{our_user.password_hash}}</p>
     </td>
     <td>
       <a href="{{ url_for ('update', id=our_user.id )}}" class="btn btn-success"
@@ -40,6 +41,9 @@ get_flashed_messages() %}
     {{ form.hidden_tag() }} 
     {{ form.name.label(class="form-label")}} {{
     form.name(class="form-control")}}
+    <br/>
+    {{ form.username.label(class="form-label")}} {{
+    form.username(class="form-control")}}
     <br />
     {{ form.email.label(class="form-label")}} {{
     form.email(class="form-control")}}

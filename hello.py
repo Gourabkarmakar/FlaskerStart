@@ -1,15 +1,15 @@
 from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField,BooleanField, ValidationError
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, EqualTo, Length
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-# from text import user_name,password
 import text
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 from wtforms.widgets import TextArea
+from flask_login import UserMixin, login_user, login_required, LoginManager, logout_user, current_user
 
 # Create a Flask Instance
 app = Flask(__name__)
@@ -23,8 +23,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Create Model
+# Flask Login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+# Create Model
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -33,16 +43,20 @@ class Posts(db.Model):
     date_posted = db.Column(db.DateTime, default=datetime.now)
     slug = db.Column(db.String(255))
 
+
 class Post_form(FlaskForm):
     title = StringField("Title", validators=[DataRequired()])
-    content = StringField("Content", validators=[DataRequired()], widget= TextArea())
+    content = StringField("Content",
+                          validators=[DataRequired()],
+                          widget=TextArea())
     author = StringField("Author", validators=[DataRequired()])
     slug = StringField("Slug", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False, unique=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(100), nullable=False, unique=True)
     favorite_color = db.Column(db.String(120))
@@ -70,6 +84,7 @@ class User(db.Model):
 # Create a Form Class
 class UserForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
+    username = StringField("User Name", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired()])
     favorite_color = StringField("Favorite Color")
     password_hash = PasswordField("Password",
@@ -90,34 +105,42 @@ class NameForm(FlaskForm):
 
 class PasswordForm(FlaskForm):
     email = StringField("What is your Email", validators=[DataRequired()])
-    password_hash = PasswordField("What is Your Passwords",validators=[DataRequired()])
+    password_hash = PasswordField("What is Your Passwords",
+                                  validators=[DataRequired()])
     submit = SubmitField("Check")
 
 
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("submit")
+
 
 @app.route('/add_posts', methods=['GET', 'POST'])
+@login_required
 def add_posts():
     form = Post_form()
     if form.validate_on_submit():
-        post = Posts(
-            title = form.title.data,
-            content = form.content.data,
-            author = form.author.data,
-            slug = form.slug.data)
-        form.title.data= ''
-        form.content.data= ''
-        form.author.data= ''
-        form.slug.data=''
+        post = Posts(title=form.title.data,
+                     content=form.content.data,
+                     author=form.author.data,
+                     slug=form.slug.data)
+        form.title.data = ''
+        form.content.data = ''
+        form.author.data = ''
+        form.slug.data = ''
 
         db.session.add(post)
         db.session.commit()
 
         flash("BlogPost Submit Sucessfully")
 
-    return render_template("add_post.html",form= form)
+    return render_template("add_post.html", form=form)
+
 
 # Delete Posts
 @app.route('/posts/delete/<int:id>')
+@login_required
 def delete_post(id):
     post_to_delete = Posts.query.get_or_404(id)
     try:
@@ -131,20 +154,24 @@ def delete_post(id):
 
     except:
         flash("Sorry This Post Not Deleted , We Fix This Soon...")
-        
 
-@app.route('/posts', methods=["GET","POST"])
+
+@app.route('/posts', methods=["GET", "POST"])
+@login_required
 def posts():
     posts = Posts.query.order_by(Posts.date_posted)
     return render_template("posts.html", posts=posts)
 
+
 @app.route('/post/<int:id>')
+@login_required
 def post(id):
     post = Posts.query.get_or_404(id)
-    return render_template(
-        'post.html',post=post)
+    return render_template('post.html', post=post)
 
-@app.route('/posts/edit_post/<int:id>', methods=['GET','POST'])
+
+@app.route('/posts/edit_post/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit_post(id):
     post = Posts.query.get_or_404(id)
     form = Post_form()
@@ -159,22 +186,21 @@ def edit_post(id):
         flash("Post Has been updated")
 
         return redirect(url_for("posts"))
-    
+
     form.title.data = post.title
     form.author.data = post.author
     form.slug.data = post.slug
     form.content.data = post.content
-    
+
     return render_template(
         'edit_post.html',
-        form = form,
+        form=form,
     )
-
 
 
 @app.route('/date')
 def get_current_date():
-    return{"date": date.today()}
+    return {"date": date.today()}
 
 
 # Update Database Record
@@ -187,7 +213,7 @@ def update(id):
         name_to_update.email = request.form['email']
         name_to_update.favorite_color = request.form['favorite_color']
         name_to_update.password_hash = request.form['password_hash']
-        name_to_update.password_hash2= request.form['password_hash_2']
+        name_to_update.password_hash2 = request.form['password_hash_2']
         try:
             db.session.commit()
             flash("User Update Successfully")
@@ -242,6 +268,7 @@ def add_user():
             hashed_password = generate_password_hash(form.password_hash.data,
                                                      "sha256")
             user = User(name=form.name.data,
+                        username=form.username.data,
                         email=form.email.data,
                         favorite_color=form.favorite_color.data,
                         password_hash=hashed_password)
@@ -249,6 +276,7 @@ def add_user():
             db.session.commit()
         name = form.name.data
         form.name.data = ''
+        form.username.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
         form.password_hash = ''
@@ -310,7 +338,7 @@ def test_pass():
     email = None
     password = None
     pass_to_check = None
-    passed= None
+    passed = None
 
     form = PasswordForm()
 
@@ -320,20 +348,58 @@ def test_pass():
         password = form.password_hash.data
 
         form.email.data = ''
-        form.password_hash.data= ''
+        form.password_hash.data = ''
 
         pass_to_check = User.query.filter_by(email=email).first()
         passed = check_password_hash(pass_to_check.password_hash, password)
 
-        if(passed):
+        if (passed):
             flash("Password Is Correct")
         else:
             flash("Email or Password Wrong")
 
         # flash("Form Submitted successfully")
 
-    return render_template("test_password.html",email=email,
-    password=password,pass_to_check=pass_to_check,passed=passed,form=form)
+    return render_template("test_password.html",
+                           email=email,
+                           password=password,
+                           pass_to_check=pass_to_check,
+                           passed=passed,
+                           form=form)
+
+
+# Create login page
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            if check_password_hash(user.password_hash, form.password.data):
+                login_user(user)
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Wrong password - Try again')
+        else:
+            flash('The user not registered')
+
+    return render_template("login.html", form=form)
+
+# Logout
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out >>>>>>>>>>>>')
+    return redirect(url_for('login'))
+
+
+# Dashboard
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    form = LoginForm()
+    return render_template("dashboard.html", form=form)
 
 
 if __name__ == '__main__':
