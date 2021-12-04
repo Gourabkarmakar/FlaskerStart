@@ -26,5 +26,24 @@ get_flashed_messages() %}
   </div>
 </div>
 
+<br />
+<div class="shadow p-3 mb-5 bg-body rounded">
+  <form action="{{ url_for('dashboard')}}" method="POST">
+    {{ form.hidden_tag() }}
+    {{ form.name.label(class="form-label")}} {{
+    form.name(class="form-control" ,value= name_to_update.name)}}
+    <br/>
+    {{ form.username.label(class="form-label")}} {{
+    form.username(class="form-control" ,value= name_to_update.username)}}
+    <br />
+    {{ form.email.label(class="form-label")}} {{
+    form.email(class="form-control" ,value=name_to_update.email)}}
+    <br />
+    {{ form.favorite_color.label(class="form-label")}} {{
+    form.favorite_color(class="form-control" ,value= name_to_update.favorite_color)}}
+    <br />
 
+    {{form.submit(class="btn btn-warning", value="Update")}}
+  </form>
+</div>
 {% endblock %}
