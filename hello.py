@@ -1,26 +1,22 @@
+from datetime import date
+import os
 from flask import Flask, render_template, flash, request, redirect, url_for
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError
-from wtforms.validators import DataRequired, EqualTo, Length
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-import text
+from flask_login import login_user, login_required, LoginManager, logout_user, current_user
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date
-from wtforms.widgets import TextArea
-from flask_login import UserMixin, login_user, login_required, LoginManager, logout_user, current_user
+from projectModels import Posts, User, db
+from useforms import LoginForm, Post_form, PasswordForm, NameForm, UserForm
+
 
 # Create a Flask Instance
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "my super secret key for csrf"
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-app.config[
-    'SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://' + text.user_name + ':' + text.password + '@localhost/users_db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://'+os.environ.get("USER_NAME")+':'+os.environ.get("PASSWORD")+'@localhost/users_db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
-# Initialize Database
-db = SQLAlchemy(app)
+db.app = app
+db.init_app(app)
 migrate = Migrate(app, db)
 
 # Flask Login manager
@@ -32,88 +28,6 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-
-# Create Model
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    author = db.Column(db.String(255))
-    date_posted = db.Column(db.DateTime, default=datetime.now)
-    slug = db.Column(db.String(255))
-
-
-class Post_form(FlaskForm):
-    title = StringField("Title", validators=[DataRequired()])
-    content = StringField("Content",
-                          validators=[DataRequired()],
-                          widget=TextArea())
-    author = StringField("Author", validators=[DataRequired()])
-    slug = StringField("Slug", validators=[DataRequired()])
-    submit = SubmitField("Submit")
-
-
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False, unique=True)
-    name = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    favorite_color = db.Column(db.String(120))
-    date_added = db.Column(db.DateTime, default=datetime.now)
-
-    # Password section
-    password_hash = db.Column(db.String(128))
-
-    @property
-    def password(self):
-        raise AttributeError('Password Is Not a readable attribuite')
-
-    @password.setter
-    def password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def verify_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    # Create a String
-    def __repr__(self):
-        return '<Name %r>' % self.name
-
-
-# Create a Form Class
-class UserForm(FlaskForm):
-    name = StringField("Name", validators=[DataRequired()])
-    username = StringField("User Name", validators=[DataRequired()])
-    email = StringField("Email", validators=[DataRequired()])
-    favorite_color = StringField("Favorite Color")
-    password_hash = PasswordField("Password",
-                                  validators=[
-                                      DataRequired(),
-                                      EqualTo('password_hash2',
-                                              message="Passwords Must Match! ")
-                                  ])
-    password_hash2 = PasswordField("Confirm Password",
-                                   validators=[DataRequired()])
-    submit = SubmitField('Submit')
-
-
-class NameForm(FlaskForm):
-    name = StringField("What Is Your Name", validators=[DataRequired()])
-    submit = SubmitField('Submit')
-
-
-class PasswordForm(FlaskForm):
-    email = StringField("What is your Email", validators=[DataRequired()])
-    password_hash = PasswordField("What is Your Passwords",
-                                  validators=[DataRequired()])
-    submit = SubmitField("Check")
-
-
-class LoginForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()])
-    password = PasswordField("Password", validators=[DataRequired()])
-    submit = SubmitField("submit")
 
 
 @app.route('/add_posts', methods=['GET', 'POST'])
@@ -385,6 +299,7 @@ def login():
 
     return render_template("login.html", form=form)
 
+
 # Logout
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
@@ -398,8 +313,30 @@ def logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    form = LoginForm()
-    return render_template("dashboard.html", form=form)
+    form = UserForm()
+    id = current_user.id
+    name_to_update = User.query.get_or_404(id)
+    if request.method == "POST":
+        name_to_update.name = request.form['name']
+        name_to_update.username = request.form['username']
+        name_to_update.email = request.form['email']
+        name_to_update.favorite_color = request.form['favorite_color']
+
+        try:
+            db.session.commit()
+            flash("User Update Successfully")
+            return render_template("dashboard.html",
+                                   form=form,
+                                   name_to_update=name_to_update)
+        except:
+            flash("There Is Problem ")
+            return render_template("dashboard.html",
+                                   form=form,
+                                   name_to_update=name_to_update)
+    else:
+        return render_template("dashboard.html",
+                               form=form,
+                               name_to_update=name_to_update, id=id)
 
 
 if __name__ == '__main__':
