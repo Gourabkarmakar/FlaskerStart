@@ -2,9 +2,11 @@ from datetime import date
 import os
 from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, LoginManager, logout_user, current_user
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
-from projectModels import db, Posts, User
+from projectModels import Posts, User, db
 from useforms import LoginForm, Post_form, PasswordForm, NameForm, UserForm
+
 
 # Create a Flask Instance
 app = Flask(__name__)
@@ -13,6 +15,9 @@ app.config['SECRET_KEY'] = "my super secret key for csrf"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://'+os.environ.get("USER_NAME")+':'+os.environ.get("PASSWORD")+'@localhost/users_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
+db.app = app
+db.init_app(app)
+migrate = Migrate(app, db)
 
 # Flask Login manager
 login_manager = LoginManager()
